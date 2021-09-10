@@ -1,4 +1,6 @@
-#pragma once
+﻿#pragma once
+#include <iostream>
+#include <vector>
 #include <libprecompiled/Common.h>
 #include <libnlohmann_json/single_include/nlohmann/json.hpp>
 #define OUTPUT 1
@@ -18,7 +20,7 @@
 // learning rate
 #define learning_rate 0.001 
 
-using json=nlohmann::json;
+using json = nlohmann::json;
 
 // global model or local model
 struct Model
@@ -54,7 +56,7 @@ public:
         con_b_4 = std::vector<float>(256, 0);
         con_W_5 = std::vector<std::vector<std::vector<std::vector<float>>>>(3, std::vector<std::vector<std::vector<float>>>(3, std::vector<std::vector<float>>(256, std::vector<float>(256, 0))));
         con_b_5 = std::vector<float>(256, 0);
-        den_W_0 = std::vector<std::vector<float>>(256, std::vector<float>(100, 0));
+        den_W_0 = std::vector<std::vector<float>>(512, std::vector<float>(100, 0));
         den_b_0 = std::vector<float>(100, 0);
     }
 
@@ -114,24 +116,24 @@ public:
 // the meta of local model
 struct Meta
 {
-	/* meta data */
-	int n_samples;
-	float avg_cost;
+    /* meta data */
+    int n_samples;
+    float avg_cost;
 
-	/* constructor function */ 
-	Meta(int n = 0, float cost = 0) : n_samples(n), avg_cost(cost){}
+    /* constructor function */
+    Meta(int n = 0, float cost = 0) : n_samples(n), avg_cost(cost) {}
 
-	Meta(const json & j){
+    Meta(const json& j) {
         n_samples = j["n_samples"].get<int>();
         avg_cost = j["avg_cost"].get<float>();
     }
 
-    void operator=(const json & j){
+    void operator=(const json& j) {
         n_samples = j["n_samples"].get<int>();
         avg_cost = j["avg_cost"].get<float>();
     }
 
-    std::string to_json_string(){
+    std::string to_json_string() {
         json j;
         j["n_samples"] = n_samples;
         j["avg_cost"] = avg_cost;
@@ -142,24 +144,24 @@ struct Meta
 // the update of local model
 struct LocalUpdate
 {
-	/* update data */
-	Model delta_model;
-	Meta meta;
+    /* update data */
+    Model delta_model;
+    Meta meta;
 
-	/* constructor function */
-	LocalUpdate(){}
+    /* constructor function */
+    LocalUpdate() {}
 
-	LocalUpdate(const json & j){
+    LocalUpdate(const json& j) {
         delta_model = j["delta_model"];
         meta = j["meta"];
     }
 
-    void operator=(const json & j){
+    void operator=(const json& j) {
         delta_model = j["delta_model"];
         meta = j["meta"];
     }
 
-    std::string to_json_string(){
+    std::string to_json_string() {
         json j;
         j["delta_model"] = delta_model.to_json_string();
         j["meta"] = meta.to_json_string();
@@ -169,30 +171,30 @@ struct LocalUpdate
 
 namespace dev
 {
-	namespace precompiled
-	{
+    namespace precompiled
+    {
 
-		class CommitteePrecompiled : public dev::precompiled::Precompiled
-		{
-		public:
-			typedef std::shared_ptr<CommitteePrecompiled> Ptr;  //指针
-			CommitteePrecompiled();   //构造
-			virtual ~CommitteePrecompiled(){};   //析构
-			
-			//call函数有三个参数，
-			//_context保存交易执行的上下文，
-			//_param是调用合约的参数信息，
-			//本次调用对应合约接口以及接口的参数可以从_param解析获取，_origin是交易发送者，用于权限控制。
-			PrecompiledExecResult::Ptr call(std::shared_ptr<dev::blockverifier::ExecutiveContext> _context,
-					bytesConstRef _param, Address const& _origin = Address(),
-					Address const& _sender = Address()) override;     //重载call函数
+        class CommitteePrecompiled : public dev::precompiled::Precompiled
+        {
+        public:
+            typedef std::shared_ptr<CommitteePrecompiled> Ptr;  //指针
+            CommitteePrecompiled();   //构造
+            virtual ~CommitteePrecompiled() {};   //析构
 
-		private:
-			void InitGlobalModel(storage::Table::Ptr table, Address const& _origin, PrecompiledExecResult::Ptr callResult);
-			void Aggregate(storage::Table::Ptr table, Address const& _origin, PrecompiledExecResult::Ptr callResult, std::unordered_map<std::string, std::string>& local_scores);
-			void InsertVariable(storage::Table::Ptr table, Address const& _origin, PrecompiledExecResult::Ptr callResult, const std::string & Key, std::string & strValue);
-			std::string GetVariable(storage::Table::Ptr table, Address const& _origin, PrecompiledExecResult::Ptr callResult, const std::string & Key);
-			void UpdateVariable(storage::Table::Ptr table, Address const& _origin, PrecompiledExecResult::Ptr callResult, const std::string & Key, std::string & strValue);
-		};
-	}  // namespace precompiled
+            //call函数有三个参数，
+            //_context保存交易执行的上下文，
+            //_param是调用合约的参数信息，
+            //本次调用对应合约接口以及接口的参数可以从_param解析获取，_origin是交易发送者，用于权限控制。
+            PrecompiledExecResult::Ptr call(std::shared_ptr<dev::blockverifier::ExecutiveContext> _context,
+                bytesConstRef _param, Address const& _origin = Address(),
+                Address const& _sender = Address()) override;     //重载call函数
+
+        private:
+            void InitGlobalModel(storage::Table::Ptr table, Address const& _origin, PrecompiledExecResult::Ptr callResult);
+            void Aggregate(storage::Table::Ptr table, Address const& _origin, PrecompiledExecResult::Ptr callResult, std::unordered_map<std::string, std::string>& local_scores);
+            void InsertVariable(storage::Table::Ptr table, Address const& _origin, PrecompiledExecResult::Ptr callResult, const std::string& Key, std::string& strValue);
+            std::string GetVariable(storage::Table::Ptr table, Address const& _origin, PrecompiledExecResult::Ptr callResult, const std::string& Key);
+            void UpdateVariable(storage::Table::Ptr table, Address const& _origin, PrecompiledExecResult::Ptr callResult, const std::string& Key, std::string& strValue);
+        };
+    }  // namespace precompiled
 }  // namespace dev

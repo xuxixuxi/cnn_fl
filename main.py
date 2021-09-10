@@ -19,7 +19,7 @@ from tensorflow.keras import datasets, layers, optimizers, Sequential, metrics
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-batch_size = 8
+batch_size = 128
 
 # 序列化和反序列化
 def serialize(data):
